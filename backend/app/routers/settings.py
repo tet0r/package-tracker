@@ -23,6 +23,7 @@ def _build_settings_out(db: Session) -> schemas.SettingsOut:
         fedex_configured=carriers.is_configured(db, "FedEx"),
         usps_configured=carriers.is_configured(db, "USPS"),
         dhl_configured=carriers.is_configured(db, "DHL"),
+        amazon_configured=carriers.is_configured(db, "Amazon"),
         theme=settings_store.get_setting(db, "theme"),
         notify_delivered=settings_store.get_bool_setting(db, "notify_delivered"),
         notify_exception=settings_store.get_bool_setting(db, "notify_exception"),
@@ -71,6 +72,7 @@ def update_settings(payload: schemas.SettingsUpdate, db: Session = Depends(get_d
         "usps_consumer_key",
         "usps_consumer_secret",
         "dhl_api_key",
+        "amazon_17track_api_key",
     ):
         value = getattr(payload, field)
         if value is not None:
@@ -98,6 +100,6 @@ def test_gmail(db: Session = Depends(get_db)):
 
 @router.post("/carriers/{carrier}/test")
 def test_carrier(carrier: str, db: Session = Depends(get_db)):
-    if carrier not in ("UPS", "FedEx", "USPS", "DHL"):
+    if carrier not in ("UPS", "FedEx", "USPS", "DHL", "Amazon"):
         return {"ok": False, "error": f"Unknown carrier {carrier}"}
     return carriers.test_credentials(db, carrier)

@@ -47,6 +47,7 @@ export const api = {
       usps_consumer_key: string
       usps_consumer_secret: string
       dhl_api_key: string
+      amazon_17track_api_key: string
       theme: string
       notify_delivered: boolean
       notify_exception: boolean

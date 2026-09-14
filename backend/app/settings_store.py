@@ -13,6 +13,7 @@ SENSITIVE_KEYS = {
     "usps_consumer_key",
     "usps_consumer_secret",
     "dhl_api_key",
+    "amazon_17track_api_key",
 }
 
 DEFAULTS = {
@@ -31,6 +32,7 @@ DEFAULTS = {
     "usps_consumer_key": "",
     "usps_consumer_secret": "",
     "dhl_api_key": "",
+    "amazon_17track_api_key": "",
     "theme": "system",
     "notify_delivered": "true",
     "notify_exception": "true",

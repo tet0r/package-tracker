@@ -59,6 +59,7 @@ class SettingsOut(BaseModel):
     fedex_configured: bool
     usps_configured: bool
     dhl_configured: bool
+    amazon_configured: bool
     theme: Literal["system", "light", "dark"]
     notify_delivered: bool
     notify_exception: bool
@@ -80,6 +81,7 @@ class SettingsUpdate(BaseModel):
     usps_consumer_key: str | None = None
     usps_consumer_secret: str | None = None
     dhl_api_key: str | None = None
+    amazon_17track_api_key: str | None = None
     theme: Literal["system", "light", "dark"] | None = None
     notify_delivered: bool | None = None
     notify_exception: bool | None = None

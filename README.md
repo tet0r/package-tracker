@@ -45,6 +45,12 @@ app's **Settings** page, which is organized into three tabs:
 
   Packages from a carrier you haven't configured just won't refresh — the
   rest of the app still works.
+- **Amazon Logistics** — Amazon has no official API for tracking your own
+  orders, so this one is different: it goes through
+  [17TRACK](https://www.17track.net/en/api) (free tier), a third-party
+  tracking aggregator, rather than an official carrier API like the other
+  four. The email scanner recognizes Amazon's own "TBA"-prefixed tracking
+  numbers and routes them here automatically.
 - **Gmail** — connects over IMAP with a Gmail App Password (Settings walks
   through generating one at myaccount.google.com/apppasswords). No Google
   Cloud project, no OAuth consent screen, and no expiry timer.
@@ -99,11 +105,15 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
   building this. TrackingMore-style aggregators work around that by using
   these same official carrier APIs on your behalf; this app just calls them
   directly instead, at the cost of registering with each carrier separately.
-- **Amazon Logistics**: packages delivered by Amazon's own last-mile network
-  (not handed off to UPS/USPS/FedEx) have no public tracking API without
-  logging into your Amazon account, which this app doesn't do. Amazon orders
-  that do get a real carrier tracking number (common for UPS/USPS/FedEx
-  handoffs) are picked up normally by the email scanner.
+- **Amazon Logistics goes through a third party, deliberately**: Amazon has
+  no official API for a consumer to check their own packages — it's the one
+  carrier where "use the official API directly" (this app's approach for
+  UPS/FedEx/USPS/DHL) simply isn't on the table. 17TRACK is used instead,
+  which means Amazon tracking numbers specifically pass through a
+  third-party service, unlike everything else this app talks to. Amazon
+  orders that get a real carrier tracking number (common for UPS/USPS/FedEx
+  handoffs) are picked up normally by the email scanner and never touch
+  17TRACK at all.
 - **Why IMAP + App Password instead of OAuth**: Gmail's `gmail.readonly`
   OAuth scope is "restricted," and Google requires a paid third-party CASA
   security audit before an app using it can leave "Testing" publishing
@@ -113,12 +123,12 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
   app password is revoked or wrong, Settings shows the last error (and pings
   Discord, if configured) rather than silently failing.
 - **Carrier API field mapping**: the parsing in
-  `backend/app/services/carriers/{ups,fedex,usps,dhl}.py` follows each
-  carrier's publicly documented response schema. FedEx and USPS confirm
+  `backend/app/services/carriers/{ups,fedex,usps,dhl,amazon}.py` follows
+  each carrier's publicly documented response schema. FedEx and USPS confirm
   their status directly via a status code/category (`OD` for FedEx,
   `statusCategory` for USPS); UPS and DHL don't expose a clean code for
   "out for delivery" specifically, so that one notification type is
-  detected the same way for all four carriers — scanning each package's
+  detected the same way for all five carriers — scanning each package's
   most recent event description for the text "out for delivery"
   (case-insensitive) in `pipeline.py`'s `_is_out_for_delivery`. If UPS or
   DHL phrase it differently in practice, that's the function to adjust.

@@ -217,6 +217,42 @@ const DHL_STEPS: WizardStep[] = [
   },
 ]
 
+const AMAZON_STEPS: WizardStep[] = [
+  {
+    title: 'Understand what this is',
+    body: (
+      <p>
+        Amazon has no official API for tracking your own orders — Amazon Logistics ("TBA"-prefixed
+        tracking numbers) isn't a real carrier with a developer portal. This uses{' '}
+        <strong>17TRACK</strong>, a third-party tracking aggregator, instead. Unlike UPS/FedEx/USPS/DHL
+        above, your Amazon tracking numbers pass through this third party rather than an official
+        carrier API. The free tier covers a generous number of tracking numbers per month.
+      </p>
+    ),
+  },
+  {
+    title: 'Create a 17TRACK account',
+    body: (
+      <p>
+        Sign up for a free account at{' '}
+        <a href="https://www.17track.net/en/api" target="_blank" rel="noreferrer">
+          17track.net/en/api
+        </a>
+        .
+      </p>
+    ),
+  },
+  {
+    title: 'Get your API key',
+    body: (
+      <p>
+        Log in, then go to <strong>Settings → Security → Access Key</strong> to find your API
+        token.
+      </p>
+    ),
+  },
+]
+
 const DISCORD_STEPS: WizardStep[] = [
   {
     title: "Open your server's integration settings",
@@ -253,6 +289,7 @@ const CARRIER_FIELD_KEYS: Record<string, string[]> = {
   FedEx: ['fedex_client_id', 'fedex_client_secret'],
   USPS: ['usps_consumer_key', 'usps_consumer_secret'],
   DHL: ['dhl_api_key'],
+  Amazon: ['amazon_17track_api_key'],
 }
 
 function emptyValuesFor(keys: string[]): Record<string, string> {
@@ -285,6 +322,7 @@ export default function SettingsPage({ onLoggedOut }: { onLoggedOut: () => void 
   const testFedex = useMutation({ mutationFn: () => api.testCarrier('FedEx') })
   const testUsps = useMutation({ mutationFn: () => api.testCarrier('USPS') })
   const testDhl = useMutation({ mutationFn: () => api.testCarrier('DHL') })
+  const testAmazon = useMutation({ mutationFn: () => api.testCarrier('Amazon') })
 
   const changePassword = useMutation({
     mutationFn: (vars: { current_password: string; new_password: string }) =>
@@ -446,6 +484,19 @@ export default function SettingsPage({ onLoggedOut }: { onLoggedOut: () => void 
             onTest={() => testDhl.mutate()}
             testing={testDhl.isPending}
             testResult={testDhl.data}
+          />
+
+          <SetupWizard
+            title="Amazon Logistics (via 17TRACK)"
+            configured={settings.amazon_configured}
+            steps={AMAZON_STEPS}
+            fields={[{ key: 'amazon_17track_api_key', label: 'API key' }]}
+            saving={save.isPending}
+            onSave={(values) => save.mutate(values)}
+            onRemove={() => save.mutate(emptyValuesFor(CARRIER_FIELD_KEYS.Amazon))}
+            onTest={() => testAmazon.mutate()}
+            testing={testAmazon.isPending}
+            testResult={testAmazon.data}
           />
 
           <SetupWizard
