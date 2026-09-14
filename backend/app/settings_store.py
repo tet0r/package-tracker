@@ -32,6 +32,10 @@ DEFAULTS = {
     "usps_consumer_secret": "",
     "dhl_api_key": "",
     "theme": "system",
+    "notify_delivered": "true",
+    "notify_exception": "true",
+    "notify_new_package": "true",
+    "notify_gmail_errors": "true",
 }
 
 
@@ -56,3 +60,11 @@ def set_setting(db: Session, key: str, value: str) -> None:
     else:
         row.value = stored
     db.commit()
+
+
+def get_bool_setting(db: Session, key: str) -> bool:
+    return get_setting(db, key) == "true"
+
+
+def set_bool_setting(db: Session, key: str, value: bool) -> None:
+    set_setting(db, key, "true" if value else "false")

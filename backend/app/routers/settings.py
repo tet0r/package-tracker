@@ -24,6 +24,10 @@ def _build_settings_out(db: Session) -> schemas.SettingsOut:
         usps_configured=carriers.is_configured(db, "USPS"),
         dhl_configured=carriers.is_configured(db, "DHL"),
         theme=settings_store.get_setting(db, "theme"),
+        notify_delivered=settings_store.get_bool_setting(db, "notify_delivered"),
+        notify_exception=settings_store.get_bool_setting(db, "notify_exception"),
+        notify_new_package=settings_store.get_bool_setting(db, "notify_new_package"),
+        notify_gmail_errors=settings_store.get_bool_setting(db, "notify_gmail_errors"),
     )
 
 
@@ -46,6 +50,10 @@ def update_settings(payload: schemas.SettingsUpdate, db: Session = Depends(get_d
         settings_store.set_setting(db, "discord_webhook_url", payload.discord_webhook_url)
     if payload.theme is not None:
         settings_store.set_setting(db, "theme", payload.theme)
+    for bool_field in ("notify_delivered", "notify_exception", "notify_new_package", "notify_gmail_errors"):
+        value = getattr(payload, bool_field)
+        if value is not None:
+            settings_store.set_bool_setting(db, bool_field, value)
     for field in (
         "gmail_address",
         "gmail_app_password",

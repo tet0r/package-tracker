@@ -460,6 +460,45 @@ export default function SettingsPage({ onLoggedOut }: { onLoggedOut: () => void 
             testing={testDiscord.isPending}
             testResult={testDiscord.data}
           />
+
+          {settings.discord_webhook_url_set && (
+            <section>
+              <h2>Discord notification types</h2>
+              <p className="muted">Choose which events post to your Discord webhook.</p>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={settings.notify_delivered}
+                  onChange={(e) => save.mutate({ notify_delivered: e.target.checked })}
+                />
+                Package delivered
+              </label>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={settings.notify_exception}
+                  onChange={(e) => save.mutate({ notify_exception: e.target.checked })}
+                />
+                Delivery exception / problem
+              </label>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={settings.notify_new_package}
+                  onChange={(e) => save.mutate({ notify_new_package: e.target.checked })}
+                />
+                New package found in email
+              </label>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={settings.notify_gmail_errors}
+                  onChange={(e) => save.mutate({ notify_gmail_errors: e.target.checked })}
+                />
+                Gmail connection errors
+              </label>
+            </section>
+          )}
         </>
       )}
 

@@ -60,6 +60,10 @@ class SettingsOut(BaseModel):
     usps_configured: bool
     dhl_configured: bool
     theme: Literal["system", "light", "dark"]
+    notify_delivered: bool
+    notify_exception: bool
+    notify_new_package: bool
+    notify_gmail_errors: bool
 
 
 class SettingsUpdate(BaseModel):
@@ -76,3 +80,7 @@ class SettingsUpdate(BaseModel):
     usps_consumer_secret: str | None = None
     dhl_api_key: str | None = None
     theme: Literal["system", "light", "dark"] | None = None
+    notify_delivered: bool | None = None
+    notify_exception: bool | None = None
+    notify_new_package: bool | None = None
+    notify_gmail_errors: bool | None = None

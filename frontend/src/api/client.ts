@@ -48,6 +48,10 @@ export const api = {
       usps_consumer_secret: string
       dhl_api_key: string
       theme: string
+      notify_delivered: boolean
+      notify_exception: boolean
+      notify_new_package: boolean
+      notify_gmail_errors: boolean
     }>,
   ) => request<Settings>('/settings', { method: 'PUT', body: JSON.stringify(data) }),
   testDiscord: () => request<{ ok: boolean; error?: string }>('/settings/discord/test', { method: 'POST' }),

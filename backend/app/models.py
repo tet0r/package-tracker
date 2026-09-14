@@ -22,6 +22,7 @@ class Package(Base):
     last_update_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     source_email_subject: Mapped[str | None] = mapped_column(String, nullable=True)
     delivered_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    exception_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     archived: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 

@@ -49,7 +49,7 @@ def connect(db: Session) -> imaplib.IMAP4_SSL | None:
         message = str(exc)
         settings_store.set_setting(db, "gmail_last_error", message)
         webhook = settings_store.get_setting(db, "discord_webhook_url")
-        if webhook:
+        if webhook and settings_store.get_bool_setting(db, "notify_gmail_errors"):
             discord_service.send_message(
                 webhook, f"⚠️ Gmail connection failed — check your app password in Settings. ({message})"
             )

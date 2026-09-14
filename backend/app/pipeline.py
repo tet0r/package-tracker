@@ -18,6 +18,9 @@ def run_email_scan() -> None:
         if conn is None:
             return
 
+        webhook_url = settings_store.get_setting(db, "discord_webhook_url")
+        notify_new_package = settings_store.get_bool_setting(db, "notify_new_package")
+
         try:
             uids = gmail.search_recent_shipping_messages(conn, days=3, max_results=25)
             for uid in uids:
@@ -47,6 +50,8 @@ def run_email_scan() -> None:
                                 source_email_subject=message["subject"],
                             )
                         )
+                        if notify_new_package and webhook_url:
+                            discord.notify_new_package(webhook_url, item_name, tracking_number, carrier)
 
                 db.add(models.ProcessedEmail(gmail_message_id=message_key))
                 db.commit()
@@ -64,6 +69,8 @@ def run_tracking_refresh() -> None:
     db = SessionLocal()
     try:
         webhook_url = settings_store.get_setting(db, "discord_webhook_url")
+        notify_delivered = settings_store.get_bool_setting(db, "notify_delivered")
+        notify_exception = settings_store.get_bool_setting(db, "notify_exception")
 
         packages = db.query(models.Package).filter_by(archived=False).all()
         for package in packages:
@@ -113,14 +120,25 @@ def run_tracking_refresh() -> None:
                 package.last_update_at = latest_event["time"]
 
             was_delivered = package.status == "delivered"
+            was_exception = package.status == "exception"
             package.status = result["status"]
             db.commit()
 
             if package.status == "delivered" and not was_delivered and not package.delivered_notified_at:
-                discord.notify_delivered(
-                    webhook_url, package.item_name, package.tracking_number, package.last_location_text
-                )
+                if notify_delivered and webhook_url:
+                    discord.notify_delivered(
+                        webhook_url, package.item_name, package.tracking_number, package.last_location_text
+                    )
                 package.delivered_notified_at = datetime.datetime.utcnow()
+                db.commit()
+
+            if package.status == "exception" and not was_exception and not package.exception_notified_at:
+                if notify_exception and webhook_url:
+                    last_description = package.events[-1].description if package.events else None
+                    discord.notify_exception(
+                        webhook_url, package.item_name, package.tracking_number, last_description
+                    )
+                package.exception_notified_at = datetime.datetime.utcnow()
                 db.commit()
 
         settings_store.set_setting(

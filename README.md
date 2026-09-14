@@ -49,7 +49,11 @@ app's **Settings** page, which is organized into three tabs:
   through generating one at myaccount.google.com/apppasswords). No Google
   Cloud project, no OAuth consent screen, and no expiry timer.
 - **Discord** — paste an incoming webhook URL (Server Settings → Integrations
-  → Webhooks) and use "Send test notification" to confirm it works.
+  → Webhooks) and use "Send test notification" to confirm it works. Once
+  configured, a "Discord notification types" section appears with checkboxes
+  for which events actually post: package delivered, delivery exception,
+  new package found in email, and Gmail connection errors — toggle off
+  whatever you don't want pinged for.
 
 ## Deploying via Portainer
 

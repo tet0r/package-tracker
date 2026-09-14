@@ -41,4 +41,8 @@ export interface Settings {
   usps_configured: boolean
   dhl_configured: boolean
   theme: Theme
+  notify_delivered: boolean
+  notify_exception: boolean
+  notify_new_package: boolean
+  notify_gmail_errors: boolean
 }
