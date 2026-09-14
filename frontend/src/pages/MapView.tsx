@@ -20,9 +20,10 @@ const defaultIcon = L.icon({
 
 export default function MapView() {
   const queryClient = useQueryClient()
+  const [showArchived, setShowArchived] = useState(false)
   const { data: packages, isLoading } = useQuery({
-    queryKey: ['packages'],
-    queryFn: () => api.listPackages(),
+    queryKey: ['packages', showArchived],
+    queryFn: () => api.listPackages(showArchived),
     refetchInterval: 60000,
   })
   const [addOpen, setAddOpen] = useState(false)
@@ -51,6 +52,14 @@ export default function MapView() {
           <button onClick={() => setAddOpen((v) => !v)}>+ Add tracking number</button>
         </div>
         {addOpen && <AddPackageForm onDone={() => setAddOpen(false)} />}
+        <label className="checkbox-row">
+          <input
+            type="checkbox"
+            checked={showArchived}
+            onChange={(e) => setShowArchived(e.target.checked)}
+          />
+          Show archived
+        </label>
         {isLoading && <p>Loading…</p>}
         <ul className="package-list">
           {(packages ?? []).map((p) => (
@@ -58,6 +67,7 @@ export default function MapView() {
               <Link to={`/packages/${p.id}`}>
                 <strong>{p.item_name}</strong>
                 <StatusBadge status={p.status} />
+                {p.archived && <span className="badge badge-unknown">Archived</span>}
                 <div className="muted">
                   {p.tracking_number}
                   {p.carrier ? ` · ${p.carrier}` : ''}
@@ -67,7 +77,11 @@ export default function MapView() {
             </li>
           ))}
           {packages && packages.length === 0 && (
-            <p className="muted">No packages yet. Add one, or connect Gmail in Settings.</p>
+            <p className="muted">
+              {showArchived
+                ? 'No packages yet.'
+                : 'No packages yet. Add one, or connect Gmail in Settings.'}
+            </p>
           )}
         </ul>
       </aside>
@@ -77,9 +91,15 @@ export default function MapView() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {located.map((p) => (
-          <Marker key={p.id} position={[p.last_lat as number, p.last_lon as number]} icon={defaultIcon}>
+          <Marker
+            key={p.id}
+            position={[p.last_lat as number, p.last_lon as number]}
+            icon={defaultIcon}
+            opacity={p.archived ? 0.5 : 1}
+          >
             <Popup>
               <strong>{p.item_name}</strong>
+              {p.archived && ' (Archived)'}
               <br />
               {p.tracking_number} {p.carrier ? `(${p.carrier})` : ''}
               <br />
