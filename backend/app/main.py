@@ -2,7 +2,7 @@ import logging
 
 from fastapi import Depends, FastAPI
 
-from . import auth, models
+from . import auth, migrations, models
 from .db import engine
 from .routers import auth as auth_router
 from .routers import packages
@@ -31,6 +31,7 @@ app.include_router(
 @app.on_event("startup")
 async def on_startup():
     models.Base.metadata.create_all(bind=engine)
+    migrations.ensure_schema(engine, models.Base)
     start_background_loops()
 
 

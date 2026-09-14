@@ -145,6 +145,13 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
   in Settings take effect without a restart.
 - `frontend/` — React + Vite + Leaflet, built and served by nginx, which also
   reverse-proxies `/api` to the backend container.
+- No Alembic — schema changes are handled by `backend/app/migrations.py`,
+  which runs on every startup, diffs each table's columns against the
+  current models, and adds whatever's missing via `ALTER TABLE`. This keeps
+  redeploys onto an existing database volume safe as the app evolves,
+  without a separate migration-file workflow. It only handles adding
+  nullable columns (the only kind of change this app has needed so far) —
+  it won't handle a dropped/renamed column or a new `NOT NULL` constraint.
 
 ## Manual triggers
 
