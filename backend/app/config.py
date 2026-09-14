@@ -6,9 +6,6 @@ class Settings:
     DATABASE_URL = os.environ.get(
         "DATABASE_URL", "postgresql+psycopg://tracker:tracker@db:5432/tracker"
     )
-    GOOGLE_REDIRECT_URI = os.environ.get(
-        "GOOGLE_REDIRECT_URI", "http://localhost:8080/api/auth/google/callback"
-    )
     NOMINATIM_USER_AGENT = os.environ.get(
         "NOMINATIM_USER_AGENT", "self-hosted-package-tracker/1.0"
     )

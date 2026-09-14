@@ -51,6 +51,36 @@ app's **Settings** page, which is organized into three tabs:
 - **Discord** — paste an incoming webhook URL (Server Settings → Integrations
   → Webhooks) and use "Send test notification" to confirm it works.
 
+## Deploying via Portainer
+
+Portainer can deploy this stack straight from GitHub — no local clone needed.
+
+1. In Portainer: **Stacks → Add stack**.
+2. Name it (e.g. `package-tracker`).
+3. Build method: **Repository**.
+   - Repository URL: `https://github.com/tet0r/package-tracker`
+   - Repository reference: `main`
+   - Compose path: `docker-compose.yml` (default)
+4. Under **Environment variables**, add:
+
+   | Variable | Value |
+   |---|---|
+   | `SECRET_KEY` | a long random string, e.g. the output of `openssl rand -hex 32` |
+   | `POSTGRES_PASSWORD` | any password |
+   | `HOST_PORT` | port to expose the app on (default `8080`) |
+   | `NOMINATIM_USER_AGENT` | optional — identifies your instance to the free geocoding API per its usage policy |
+
+   There's no `.env` file in the repo (it's gitignored on purpose, so secrets
+   never get committed) — these stack environment variables are how you
+   supply the same values `.env.example` documents for the Docker Desktop
+   path above.
+5. **Deploy the stack**.
+6. Once the containers are healthy, open `http://<your-portainer-host>:<HOST_PORT>`
+   and complete the first-run admin account setup described above.
+
+To pick up later changes, use Portainer's **Pull and redeploy** on the stack
+— it re-clones the repo and rebuilds the images.
+
 ## Known limitations
 
 - **Single-user, cookie-based sessions over plain HTTP by default**: the app
