@@ -34,6 +34,7 @@ DEFAULTS = {
     "theme": "system",
     "notify_delivered": "true",
     "notify_exception": "true",
+    "notify_out_for_delivery": "true",
     "notify_new_package": "true",
     "notify_gmail_errors": "true",
 }

@@ -71,6 +71,7 @@ def run_tracking_refresh() -> None:
         webhook_url = settings_store.get_setting(db, "discord_webhook_url")
         notify_delivered = settings_store.get_bool_setting(db, "notify_delivered")
         notify_exception = settings_store.get_bool_setting(db, "notify_exception")
+        notify_out_for_delivery = settings_store.get_bool_setting(db, "notify_out_for_delivery")
 
         packages = db.query(models.Package).filter_by(archived=False).all()
         for package in packages:
@@ -141,6 +142,16 @@ def run_tracking_refresh() -> None:
                 package.exception_notified_at = datetime.datetime.utcnow()
                 db.commit()
 
+            if not package.out_for_delivery_notified_at and any(
+                _is_out_for_delivery(e.description) for e in package.events
+            ):
+                if notify_out_for_delivery and webhook_url:
+                    discord.notify_out_for_delivery(
+                        webhook_url, package.item_name, package.tracking_number, package.last_location_text
+                    )
+                package.out_for_delivery_notified_at = datetime.datetime.utcnow()
+                db.commit()
+
         settings_store.set_setting(
             db, "last_tracking_refresh_at", datetime.datetime.utcnow().isoformat()
         )
@@ -148,6 +159,13 @@ def run_tracking_refresh() -> None:
         logger.exception("tracking refresh failed")
     finally:
         db.close()
+
+
+def _is_out_for_delivery(description: str | None) -> bool:
+    """Carriers don't share a common status code for this sub-state — UPS/DHL
+    only ever surface it in free-text event descriptions, so this heuristic is
+    used uniformly for all four carriers rather than branching per-carrier."""
+    return bool(description) and "out for delivery" in description.lower()
 
 
 def _parse_time(value: str | None) -> datetime.datetime | None:

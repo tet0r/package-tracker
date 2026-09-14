@@ -62,6 +62,7 @@ class SettingsOut(BaseModel):
     theme: Literal["system", "light", "dark"]
     notify_delivered: bool
     notify_exception: bool
+    notify_out_for_delivery: bool
     notify_new_package: bool
     notify_gmail_errors: bool
 
@@ -82,5 +83,6 @@ class SettingsUpdate(BaseModel):
     theme: Literal["system", "light", "dark"] | None = None
     notify_delivered: bool | None = None
     notify_exception: bool | None = None
+    notify_out_for_delivery: bool | None = None
     notify_new_package: bool | None = None
     notify_gmail_errors: bool | None = None

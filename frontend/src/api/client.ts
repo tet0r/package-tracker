@@ -50,6 +50,7 @@ export const api = {
       theme: string
       notify_delivered: boolean
       notify_exception: boolean
+      notify_out_for_delivery: boolean
       notify_new_package: boolean
       notify_gmail_errors: boolean
     }>,

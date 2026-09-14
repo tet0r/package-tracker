@@ -17,6 +17,14 @@ def notify_delivered(webhook_url: str, item_name: str, tracking_number: str, loc
     return send_message(webhook_url, content)
 
 
+def notify_out_for_delivery(
+    webhook_url: str, item_name: str, tracking_number: str, location: str | None
+) -> bool:
+    location_part = f" — {location}" if location else ""
+    content = f"🚚 **Out for delivery:** {item_name} ({tracking_number}){location_part}"
+    return send_message(webhook_url, content)
+
+
 def notify_exception(
     webhook_url: str, item_name: str, tracking_number: str, description: str | None
 ) -> bool:

@@ -51,9 +51,9 @@ app's **Settings** page, which is organized into three tabs:
 - **Discord** — paste an incoming webhook URL (Server Settings → Integrations
   → Webhooks) and use "Send test notification" to confirm it works. Once
   configured, a "Discord notification types" section appears with checkboxes
-  for which events actually post: package delivered, delivery exception,
-  new package found in email, and Gmail connection errors — toggle off
-  whatever you don't want pinged for.
+  for which events actually post: package delivered, out for delivery,
+  delivery exception, new package found in email, and Gmail connection
+  errors — toggle off whatever you don't want pinged for.
 
 ## Deploying via Portainer
 
@@ -114,10 +114,21 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
   Discord, if configured) rather than silently failing.
 - **Carrier API field mapping**: the parsing in
   `backend/app/services/carriers/{ups,fedex,usps,dhl}.py` follows each
-  carrier's publicly documented response schema and has been smoke-tested
-  against mocked responses matching those docs, but hasn't been run against
-  a real live response yet (a free developer account is needed to get one).
-  If a real response differs, these are the files to adjust.
+  carrier's publicly documented response schema. FedEx and USPS confirm
+  their status directly via a status code/category (`OD` for FedEx,
+  `statusCategory` for USPS); UPS and DHL don't expose a clean code for
+  "out for delivery" specifically, so that one notification type is
+  detected the same way for all four carriers — scanning each package's
+  most recent event description for the text "out for delivery"
+  (case-insensitive) in `pipeline.py`'s `_is_out_for_delivery`. If UPS or
+  DHL phrase it differently in practice, that's the function to adjust.
+- **Carrier developer portals**: expect friction that has nothing to do
+  with this app — UPS in particular requires an account number tied to a
+  payment method (not just a UPS.com login) before it'll issue API
+  credentials, its Tracking API subscription can sit "Pending" for a
+  while after app creation, and its portal occasionally throws unrelated
+  error banners that clear on a retry. USPS app names can't contain
+  hyphens. None of that is configurable from this app's side.
 - **Geocoding**: location strings from carrier scans are geocoded via the
   free OpenStreetMap Nominatim API and cached in the database, respecting its
   ~1 req/sec usage policy — city-level accuracy, not precise addresses.

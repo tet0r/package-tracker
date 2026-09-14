@@ -484,6 +484,14 @@ export default function SettingsPage({ onLoggedOut }: { onLoggedOut: () => void 
               <label className="checkbox-row">
                 <input
                   type="checkbox"
+                  checked={settings.notify_out_for_delivery}
+                  onChange={(e) => save.mutate({ notify_out_for_delivery: e.target.checked })}
+                />
+                Out for delivery
+              </label>
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
                   checked={settings.notify_new_package}
                   onChange={(e) => save.mutate({ notify_new_package: e.target.checked })}
                 />
