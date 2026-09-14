@@ -40,7 +40,6 @@ export interface Settings {
   fedex_configured: boolean
   usps_configured: boolean
   dhl_configured: boolean
-  amazon_configured: boolean
   theme: Theme
   notify_delivered: boolean
   notify_exception: boolean

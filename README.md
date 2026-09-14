@@ -45,14 +45,6 @@ app's **Settings** page, which is organized into three tabs:
 
   Packages from a carrier you haven't configured just won't refresh — the
   rest of the app still works.
-- **Amazon Logistics** — Amazon has no official API for tracking your own
-  orders, so this one is different: it goes through
-  [Ship24](https://www.ship24.com/) (free tier), a third-party tracking
-  aggregator, rather than an official carrier API like the other four.
-  (17TRACK was tried first, but its signup requires a business email —
-  Ship24 accepts a personal account.) The email scanner recognizes Amazon's
-  own "TBA"-prefixed tracking
-  numbers and routes them here automatically.
 - **Gmail** — connects over IMAP with a Gmail App Password (Settings walks
   through generating one at myaccount.google.com/apppasswords). No Google
   Cloud project, no OAuth consent screen, and no expiry timer.
@@ -107,15 +99,29 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
   building this. TrackingMore-style aggregators work around that by using
   these same official carrier APIs on your behalf; this app just calls them
   directly instead, at the cost of registering with each carrier separately.
-- **Amazon Logistics goes through a third party, deliberately**: Amazon has
-  no official API for a consumer to check their own packages — it's the one
-  carrier where "use the official API directly" (this app's approach for
-  UPS/FedEx/USPS/DHL) simply isn't on the table. Ship24 is used instead,
-  which means Amazon tracking numbers specifically pass through a
-  third-party service, unlike everything else this app talks to. Amazon
-  orders that get a real carrier tracking number (common for UPS/USPS/FedEx
-  handoffs) are picked up normally by the email scanner and never touch
-  Ship24 at all.
+- **Amazon Logistics isn't supported, deliberately — not for lack of trying**:
+  Amazon has no official API for a consumer to check their own packages, and
+  every alternative investigated turned out to be a dead end:
+  - **17TRACK** — signup requires a business email.
+  - **Ship24** — signup accepts a personal account, but the Tracking API
+    itself is paywalled behind a paid plan despite the "free tier" marketing.
+  - **TrackingMore** — same story: free dashboard, but API access requires
+    a paid plan.
+  - **`track.amazon.com`** (Amazon's own public tracking page) looked
+    promising — it's genuinely unauthenticated and returns clean JSON from
+    an undocumented `api/tracker/{trackingId}` endpoint with no bot-block —
+    but tested against a real Amazon Logistics ("TBA"-prefixed) tracking
+    number, it came back `TRACKING_ID_NOT_FOUND`. That page is branded
+    "Amazon Shipping," a different Amazon product (used by third-party
+    sellers) from the last-mile network that delivers regular amazon.com
+    orders, and it doesn't appear to resolve those numbers.
+
+  Paying for one of the aggregators (TrackingMore's Basic plan was the
+  cheapest found, ~$11/month) remains an option if this becomes worth
+  revisiting. Amazon orders that get a real carrier tracking number (common
+  for UPS/USPS/FedEx handoffs) are unaffected and already picked up
+  normally by the email scanner — this gap is specifically Amazon's own
+  last-mile deliveries.
 - **Why IMAP + App Password instead of OAuth**: Gmail's `gmail.readonly`
   OAuth scope is "restricted," and Google requires a paid third-party CASA
   security audit before an app using it can leave "Testing" publishing
@@ -125,12 +131,12 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
   app password is revoked or wrong, Settings shows the last error (and pings
   Discord, if configured) rather than silently failing.
 - **Carrier API field mapping**: the parsing in
-  `backend/app/services/carriers/{ups,fedex,usps,dhl,amazon}.py` follows
-  each carrier's publicly documented response schema. FedEx and USPS confirm
+  `backend/app/services/carriers/{ups,fedex,usps,dhl}.py` follows each
+  carrier's publicly documented response schema. FedEx and USPS confirm
   their status directly via a status code/category (`OD` for FedEx,
   `statusCategory` for USPS); UPS and DHL don't expose a clean code for
   "out for delivery" specifically, so that one notification type is
-  detected the same way for all five carriers — scanning each package's
+  detected the same way for all four carriers — scanning each package's
   most recent event description for the text "out for delivery"
   (case-insensitive) in `pipeline.py`'s `_is_out_for_delivery`. If UPS or
   DHL phrase it differently in practice, that's the function to adjust.

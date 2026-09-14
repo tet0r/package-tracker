@@ -1,13 +1,12 @@
 from sqlalchemy.orm import Session
 
-from . import amazon, dhl, fedex, ups, usps
+from . import dhl, fedex, ups, usps
 
 _MODULES = {
     "UPS": ups,
     "FedEx": fedex,
     "USPS": usps,
     "DHL": dhl,
-    "Amazon": amazon,
 }
 
 

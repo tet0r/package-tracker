@@ -1,7 +1,6 @@
 import re
 
 _UPS = re.compile(r"\b1Z[0-9A-Z]{16}\b")
-_AMAZON = re.compile(r"\bTBA\d{12}\b")
 _USPS_LONG = re.compile(r"\b(94|93|92|82|03|70|23)\d{18,20}\b")
 _FEDEX_15 = re.compile(r"\b\d{15}\b")
 _FEDEX_12 = re.compile(r"\b\d{12}\b")
@@ -35,9 +34,6 @@ def extract_tracking_numbers(text: str) -> list[tuple[str, str]]:
 
     for m in _UPS.finditer(text):
         found.setdefault(m.group(), "UPS")
-
-    for m in _AMAZON.finditer(text):
-        found.setdefault(m.group(), "Amazon")
 
     for m in _USPS_LONG.finditer(text):
         found.setdefault(m.group(), "USPS")
