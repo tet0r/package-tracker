@@ -72,7 +72,7 @@ def update_settings(payload: schemas.SettingsUpdate, db: Session = Depends(get_d
         "usps_consumer_key",
         "usps_consumer_secret",
         "dhl_api_key",
-        "amazon_17track_api_key",
+        "amazon_ship24_api_key",
     ):
         value = getattr(payload, field)
         if value is not None:

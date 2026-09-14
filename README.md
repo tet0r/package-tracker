@@ -47,9 +47,11 @@ app's **Settings** page, which is organized into three tabs:
   rest of the app still works.
 - **Amazon Logistics** — Amazon has no official API for tracking your own
   orders, so this one is different: it goes through
-  [17TRACK](https://www.17track.net/en/api) (free tier), a third-party
-  tracking aggregator, rather than an official carrier API like the other
-  four. The email scanner recognizes Amazon's own "TBA"-prefixed tracking
+  [Ship24](https://www.ship24.com/) (free tier), a third-party tracking
+  aggregator, rather than an official carrier API like the other four.
+  (17TRACK was tried first, but its signup requires a business email —
+  Ship24 accepts a personal account.) The email scanner recognizes Amazon's
+  own "TBA"-prefixed tracking
   numbers and routes them here automatically.
 - **Gmail** — connects over IMAP with a Gmail App Password (Settings walks
   through generating one at myaccount.google.com/apppasswords). No Google
@@ -108,12 +110,12 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
 - **Amazon Logistics goes through a third party, deliberately**: Amazon has
   no official API for a consumer to check their own packages — it's the one
   carrier where "use the official API directly" (this app's approach for
-  UPS/FedEx/USPS/DHL) simply isn't on the table. 17TRACK is used instead,
+  UPS/FedEx/USPS/DHL) simply isn't on the table. Ship24 is used instead,
   which means Amazon tracking numbers specifically pass through a
   third-party service, unlike everything else this app talks to. Amazon
   orders that get a real carrier tracking number (common for UPS/USPS/FedEx
   handoffs) are picked up normally by the email scanner and never touch
-  17TRACK at all.
+  Ship24 at all.
 - **Why IMAP + App Password instead of OAuth**: Gmail's `gmail.readonly`
   OAuth scope is "restricted," and Google requires a paid third-party CASA
   security audit before an app using it can leave "Testing" publishing

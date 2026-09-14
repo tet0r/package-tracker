@@ -81,7 +81,7 @@ class SettingsUpdate(BaseModel):
     usps_consumer_key: str | None = None
     usps_consumer_secret: str | None = None
     dhl_api_key: str | None = None
-    amazon_17track_api_key: str | None = None
+    amazon_ship24_api_key: str | None = None
     theme: Literal["system", "light", "dark"] | None = None
     notify_delivered: bool | None = None
     notify_exception: bool | None = None

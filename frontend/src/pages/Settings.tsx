@@ -224,19 +224,20 @@ const AMAZON_STEPS: WizardStep[] = [
       <p>
         Amazon has no official API for tracking your own orders — Amazon Logistics ("TBA"-prefixed
         tracking numbers) isn't a real carrier with a developer portal. This uses{' '}
-        <strong>17TRACK</strong>, a third-party tracking aggregator, instead. Unlike UPS/FedEx/USPS/DHL
+        <strong>Ship24</strong>, a third-party tracking aggregator, instead. Unlike UPS/FedEx/USPS/DHL
         above, your Amazon tracking numbers pass through this third party rather than an official
-        carrier API. The free tier covers a generous number of tracking numbers per month.
+        carrier API. (17TRACK was the original choice here, but its signup requires a business
+        email, which ruled it out for personal use — Ship24 accepts a normal personal account.)
       </p>
     ),
   },
   {
-    title: 'Create a 17TRACK account',
+    title: 'Create a Ship24 account',
     body: (
       <p>
         Sign up for a free account at{' '}
-        <a href="https://www.17track.net/en/api" target="_blank" rel="noreferrer">
-          17track.net/en/api
+        <a href="https://www.ship24.com/" target="_blank" rel="noreferrer">
+          ship24.com
         </a>
         .
       </p>
@@ -246,8 +247,8 @@ const AMAZON_STEPS: WizardStep[] = [
     title: 'Get your API key',
     body: (
       <p>
-        Log in, then go to <strong>Settings → Security → Access Key</strong> to find your API
-        token.
+        Log in, go to the <strong>Tracking API</strong> section of your dashboard, and generate an
+        API key from there.
       </p>
     ),
   },
@@ -289,7 +290,7 @@ const CARRIER_FIELD_KEYS: Record<string, string[]> = {
   FedEx: ['fedex_client_id', 'fedex_client_secret'],
   USPS: ['usps_consumer_key', 'usps_consumer_secret'],
   DHL: ['dhl_api_key'],
-  Amazon: ['amazon_17track_api_key'],
+  Amazon: ['amazon_ship24_api_key'],
 }
 
 function emptyValuesFor(keys: string[]): Record<string, string> {
@@ -487,10 +488,10 @@ export default function SettingsPage({ onLoggedOut }: { onLoggedOut: () => void 
           />
 
           <SetupWizard
-            title="Amazon Logistics (via 17TRACK)"
+            title="Amazon Logistics (via Ship24)"
             configured={settings.amazon_configured}
             steps={AMAZON_STEPS}
-            fields={[{ key: 'amazon_17track_api_key', label: 'API key' }]}
+            fields={[{ key: 'amazon_ship24_api_key', label: 'API key' }]}
             saving={save.isPending}
             onSave={(values) => save.mutate(values)}
             onRemove={() => save.mutate(emptyValuesFor(CARRIER_FIELD_KEYS.Amazon))}
