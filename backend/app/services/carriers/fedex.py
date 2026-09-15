@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 import httpx
 
 from ... import settings_store
+from .errors import CarrierError, describe_http_error
 
 _TOKEN_URL = "https://apis.fedex.com/oauth/token"
 _TRACK_URL = "https://apis.fedex.com/track/v1/trackingnumbers"
@@ -65,7 +66,7 @@ def get_tracking(db: Session, tracking_number: str) -> dict | None:
 
     token = _get_token(client_id, client_secret)
     if token is None:
-        return None
+        raise CarrierError("Could not authenticate with FedEx — check the API key/secret key")
 
     try:
         resp = httpx.post(
@@ -83,8 +84,8 @@ def get_tracking(db: Session, tracking_number: str) -> dict | None:
         )
         resp.raise_for_status()
         data = resp.json()
-    except httpx.HTTPError:
-        return None
+    except httpx.HTTPError as exc:
+        raise CarrierError(describe_http_error(exc)) from exc
 
     complete_results = ((data.get("output") or {}).get("completeTrackResults")) or []
     if not complete_results:

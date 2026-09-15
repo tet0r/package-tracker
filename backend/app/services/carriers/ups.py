@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 import httpx
 
 from ... import settings_store
+from .errors import CarrierError, describe_http_error
 
 _TOKEN_URL = "https://onlinetools.ups.com/security/v1/oauth/token"
 _TRACK_URL = "https://onlinetools.ups.com/api/track/v1/details/{tracking_number}"
@@ -67,7 +68,7 @@ def get_tracking(db: Session, tracking_number: str) -> dict | None:
 
     token = _get_token(client_id, client_secret)
     if token is None:
-        return None
+        raise CarrierError("Could not authenticate with UPS — check the Client ID/secret")
 
     try:
         resp = httpx.get(
@@ -81,8 +82,8 @@ def get_tracking(db: Session, tracking_number: str) -> dict | None:
         )
         resp.raise_for_status()
         data = resp.json()
-    except httpx.HTTPError:
-        return None
+    except httpx.HTTPError as exc:
+        raise CarrierError(describe_http_error(exc)) from exc
 
     shipments = (data.get("trackResponse") or {}).get("shipment") or []
     if not shipments:

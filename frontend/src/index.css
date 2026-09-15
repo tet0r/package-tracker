@@ -53,6 +53,12 @@ body {
   color: var(--text);
 }
 
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+}
+
 .app-shell {
   display: flex;
   flex-direction: column;
@@ -123,13 +129,20 @@ main {
 
 .package-list li {
   border-bottom: 1px solid var(--border);
-  padding: 0.6rem 0;
 }
 
 .package-list a {
   color: var(--text);
   text-decoration: none;
   display: block;
+  padding: 0.6rem 0.5rem;
+  margin: 0 -0.5rem;
+  border-radius: 6px;
+  transition: background-color 0.12s ease;
+}
+
+.package-list a:hover {
+  background: var(--bg);
 }
 
 .muted {
@@ -142,6 +155,7 @@ main {
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
   font-size: 0.75rem;
+  font-weight: 600;
   margin-left: 0.4rem;
 }
 
@@ -184,17 +198,19 @@ main {
 .settings section {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .wizard-section {
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 1rem;
   margin-bottom: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 
 .wizard-header {
@@ -239,6 +255,26 @@ main {
   gap: 0.5rem;
 }
 
+.wizard-progress {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.wizard-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border);
+}
+
+.wizard-dot.done {
+  background: var(--success);
+}
+
+.wizard-dot.active {
+  background: var(--accent);
+}
+
 label {
   display: flex;
   flex-direction: column;
@@ -259,20 +295,46 @@ label {
 input,
 button {
   font: inherit;
-  padding: 0.5rem;
+  padding: 0.5rem 0.75rem;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--text);
 }
 
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 button {
   cursor: pointer;
+  transition:
+    background-color 0.12s ease,
+    border-color 0.12s ease,
+    opacity 0.12s ease;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--accent);
 }
 
 button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
+
+button.primary:hover:not(:disabled) {
+  filter: brightness(1.08);
+  border-color: var(--accent);
 }
 
 .button-link {
@@ -291,6 +353,15 @@ button:disabled {
 
 .error {
   color: var(--error);
+}
+
+.error-banner {
+  background: rgba(224, 86, 86, 0.1);
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin: 1rem 0;
+  color: var(--text);
 }
 
 .detail {
@@ -376,12 +447,91 @@ button.danger {
   max-width: 360px;
   background: var(--panel);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 1.5rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
 }
 
 .auth-screen h1 {
   margin: 0 0 0.25rem;
   font-size: 1.2rem;
   text-align: center;
+}
+
+.sidebar-toggle {
+  display: none;
+}
+
+.sidebar-backdrop {
+  display: none;
+}
+
+/* ---- Mobile (≤720px) ---- */
+@media (max-width: 720px) {
+  .app-header {
+    padding: 0.6rem 0.85rem;
+  }
+
+  .app-header h1 {
+    font-size: 1rem;
+  }
+
+  .map-layout {
+    position: relative;
+  }
+
+  .sidebar-toggle {
+    display: inline-flex;
+    position: absolute;
+    top: 0.6rem;
+    left: 0.6rem;
+    z-index: 1001;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .sidebar {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: 1000;
+    width: 85vw;
+    max-width: 320px;
+    min-width: 0;
+    transform: translateX(-100%);
+    transition: transform 0.2s ease;
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.35);
+  }
+
+  .sidebar.open {
+    transform: translateX(0);
+  }
+
+  .sidebar-backdrop.open {
+    display: block;
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+  }
+
+  .settings,
+  .detail {
+    padding: 1rem;
+  }
+
+  .wizard-nav,
+  .sidebar-actions,
+  .detail-actions,
+  .settings-tabs,
+  .theme-toggle {
+    flex-wrap: wrap;
+  }
+
+  .settings-tabs button {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.4rem;
+  }
+
+  .detail form {
+    flex-wrap: wrap;
+  }
 }

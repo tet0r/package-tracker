@@ -28,6 +28,8 @@ class PackageOut(BaseModel):
     last_lon: float | None
     last_location_text: str | None
     last_update_at: datetime | None
+    last_error: str | None
+    last_error_at: datetime | None
     archived: bool
     created_at: datetime
 

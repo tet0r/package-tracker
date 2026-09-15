@@ -18,6 +18,8 @@ export interface Package {
   last_lon: number | null
   last_location_text: string | null
   last_update_at: string | null
+  last_error: string | null
+  last_error_at: string | null
   archived: boolean
   created_at: string
 }

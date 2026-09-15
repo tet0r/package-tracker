@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 import httpx
 
 from ... import settings_store
+from .errors import CarrierError, describe_http_error
 
 _TRACK_URL = "https://api-eu.dhl.com/track/shipments"
 
@@ -52,10 +53,12 @@ def get_tracking(db: Session, tracking_number: str) -> dict | None:
             headers={"DHL-API-Key": api_key},
             timeout=20,
         )
+        if resp.status_code == 404:
+            return None  # DHL has no record of this shipment yet, not an error
         resp.raise_for_status()
         data = resp.json()
-    except httpx.HTTPError:
-        return None
+    except httpx.HTTPError as exc:
+        raise CarrierError(describe_http_error(exc)) from exc
 
     shipments = data.get("shipments") or []
     if not shipments:

@@ -45,7 +45,7 @@ export default function Setup({ onDone }: { onDone: () => void }) {
           <input type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} />
         </label>
         {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={!username || !password || mutation.isPending}>
+        <button type="submit" className="primary" disabled={!username || !password || mutation.isPending}>
           Create account
         </button>
       </form>

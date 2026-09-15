@@ -27,6 +27,7 @@ export default function MapView() {
     refetchInterval: 60000,
   })
   const [addOpen, setAddOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const scanNow = useMutation({
     mutationFn: api.scanNow,
@@ -41,7 +42,19 @@ export default function MapView() {
 
   return (
     <div className="map-layout">
-      <aside className="sidebar">
+      <button
+        type="button"
+        className="sidebar-toggle"
+        onClick={() => setSidebarOpen((v) => !v)}
+        aria-label={sidebarOpen ? 'Hide package list' : 'Show package list'}
+      >
+        {sidebarOpen ? '✕' : '☰ Packages'}
+      </button>
+      <div
+        className={`sidebar-backdrop ${sidebarOpen ? 'open' : ''}`}
+        onClick={() => setSidebarOpen(false)}
+      />
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-actions">
           <button onClick={() => scanNow.mutate()} disabled={scanNow.isPending}>
             {scanNow.isPending ? 'Scanning…' : 'Scan emails now'}
@@ -49,7 +62,9 @@ export default function MapView() {
           <button onClick={() => refreshNow.mutate()} disabled={refreshNow.isPending}>
             {refreshNow.isPending ? 'Refreshing…' : 'Refresh tracking now'}
           </button>
-          <button onClick={() => setAddOpen((v) => !v)}>+ Add tracking number</button>
+          <button className="primary" onClick={() => setAddOpen((v) => !v)}>
+            + Add tracking number
+          </button>
         </div>
         {addOpen && <AddPackageForm onDone={() => setAddOpen(false)} />}
         <label className="checkbox-row">
@@ -68,6 +83,11 @@ export default function MapView() {
                 <strong>{p.item_name}</strong>
                 <StatusBadge status={p.status} />
                 {p.archived && <span className="badge badge-unknown">Archived</span>}
+                {p.last_error && (
+                  <span className="badge badge-exception" title={p.last_error}>
+                    ⚠ refresh failing
+                  </span>
+                )}
                 <div className="muted">
                   {p.tracking_number}
                   {p.carrier ? ` · ${p.carrier}` : ''}
@@ -106,6 +126,12 @@ export default function MapView() {
               <StatusBadge status={p.status} />
               <br />
               {p.last_location_text}
+              {p.last_error && (
+                <>
+                  <br />
+                  <span className="error">⚠ {p.last_error}</span>
+                </>
+              )}
               <br />
               <Link to={`/packages/${p.id}`}>View history</Link>
             </Popup>
@@ -147,7 +173,7 @@ function AddPackageForm({ onDone }: { onDone: () => void }) {
         value={itemName}
         onChange={(e) => setItemName(e.target.value)}
       />
-      <button type="submit" disabled={create.isPending}>
+      <button type="submit" className="primary" disabled={create.isPending}>
         Add
       </button>
       {create.isError && <p className="error">{(create.error as Error).message}</p>}

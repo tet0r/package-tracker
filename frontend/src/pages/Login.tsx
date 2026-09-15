@@ -32,7 +32,7 @@ export default function Login({ onDone }: { onDone: () => void }) {
           <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </label>
         {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={!username || !password || mutation.isPending}>
+        <button type="submit" className="primary" disabled={!username || !password || mutation.isPending}>
           Log in
         </button>
       </form>

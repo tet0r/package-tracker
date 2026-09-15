@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 import httpx
 
 from ... import settings_store
+from .errors import CarrierError, describe_http_error
 
 _TOKEN_URL = "https://apis.usps.com/oauth2/v3/token"
 _TRACK_URL = "https://apis.usps.com/tracking/v3/tracking/{tracking_number}"
@@ -61,7 +62,7 @@ def get_tracking(db: Session, tracking_number: str) -> dict | None:
 
     token = _get_token(consumer_key, consumer_secret)
     if token is None:
-        return None
+        raise CarrierError("Could not authenticate with USPS — check the consumer key/secret")
 
     try:
         resp = httpx.get(
@@ -72,8 +73,8 @@ def get_tracking(db: Session, tracking_number: str) -> dict | None:
         )
         resp.raise_for_status()
         data = resp.json()
-    except httpx.HTTPError:
-        return None
+    except httpx.HTTPError as exc:
+        raise CarrierError(describe_http_error(exc)) from exc
 
     events = []
     for event in data.get("trackingEvents") or []:

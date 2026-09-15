@@ -67,8 +67,13 @@ export default function SetupWizard({
 
       {open && (
         <div className="wizard-body">
-          <div className="muted">
-            Step {stepIndex + 1} of {totalSteps}
+          <div className="wizard-progress" aria-label={`Step ${stepIndex + 1} of ${totalSteps}`}>
+            {Array.from({ length: totalSteps }).map((_, i) => (
+              <span
+                key={i}
+                className={`wizard-dot ${i === stepIndex ? 'active' : ''} ${i < stepIndex ? 'done' : ''}`}
+              />
+            ))}
           </div>
 
           {onCredentialsStep ? (
@@ -87,7 +92,12 @@ export default function SetupWizard({
                 <button type="button" onClick={() => setStepIndex((i) => Math.max(0, i - 1))}>
                   Back
                 </button>
-                <button type="button" onClick={() => onSave(values)} disabled={!allFilled || saving}>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={() => onSave(values)}
+                  disabled={!allFilled || saving}
+                >
                   Save
                 </button>
                 {onTest && (
@@ -123,7 +133,7 @@ export default function SetupWizard({
                     Back
                   </button>
                 )}
-                <button type="button" onClick={() => setStepIndex((i) => i + 1)}>
+                <button type="button" className="primary" onClick={() => setStepIndex((i) => i + 1)}>
                   Next
                 </button>
               </div>

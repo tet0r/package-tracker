@@ -4,6 +4,7 @@ import logging
 from . import models, settings_store
 from .db import SessionLocal
 from .services import carriers, discord, extractor, geocode, gmail
+from .services.carriers.errors import CarrierError
 
 logger = logging.getLogger(__name__)
 
@@ -81,9 +82,21 @@ def run_tracking_refresh() -> None:
             if not package.carrier or not carriers.is_configured(db, package.carrier):
                 continue
 
-            result = carriers.get_tracking(db, package.carrier, package.tracking_number)
+            try:
+                result = carriers.get_tracking(db, package.carrier, package.tracking_number)
+            except CarrierError as exc:
+                package.last_error = str(exc)
+                package.last_error_at = datetime.datetime.utcnow()
+                db.commit()
+                continue
+
             if result is None:
                 continue
+
+            if package.last_error:
+                package.last_error = None
+                package.last_error_at = None
+                db.commit()
 
             existing_times = {
                 e.event_time.isoformat() if e.event_time else None for e in package.events

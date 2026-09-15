@@ -43,6 +43,15 @@ export default function PackageDetailPage() {
         {pkg.tracking_number} {pkg.carrier ? `· ${pkg.carrier}` : ''}
       </p>
 
+      {pkg.last_error && (
+        <div className="error-banner">
+          <strong>⚠ Tracking refresh is failing:</strong> {pkg.last_error}
+          {pkg.last_error_at && (
+            <div className="muted">Since {new Date(pkg.last_error_at).toLocaleString()}</div>
+          )}
+        </div>
+      )}
+
       <form
         onSubmit={(e) => {
           e.preventDefault()

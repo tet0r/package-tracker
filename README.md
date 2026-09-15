@@ -176,3 +176,22 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
 Useful before Gmail/carrier credentials are configured, or any time: the map page
 has "Scan emails now" and "Refresh tracking now" buttons that run the
 background jobs immediately.
+
+## UI notes
+
+- **Per-package error visibility** — if a carrier API call fails (bad
+  credentials, rate limiting, a network error), that's no longer silent.
+  The package gets a "⚠ refresh failing" badge in the sidebar list and map
+  popup (hover for the message) and a full error banner on its detail page,
+  including when the failure started. It clears automatically on the next
+  successful refresh. "No data yet" (a carrier just hasn't seen the package)
+  is not treated as an error — only actual failures are.
+- **Mobile** — under ~720px wide, the map's package sidebar becomes a
+  slide-out drawer (☰ button, top-left) instead of a fixed column, so the
+  map itself has full width. Settings and package-detail pages already
+  reflow to one column at that width.
+- **Local frontend development** without Docker: `npm --prefix frontend run
+  dev` starts a hot-reloading Vite dev server (see `.claude/launch.json`).
+  It has no backend to talk to on its own — point it at a running
+  `docker compose up` backend, or expect API calls to fail and the app to
+  sit on the login screen.
