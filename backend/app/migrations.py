@@ -38,3 +38,29 @@ def ensure_schema(engine: Engine, base: type[DeclarativeBase]) -> None:
                 col_type = column.type.compile(dialect=conn.dialect)
                 logger.warning("adding missing column %s.%s (%s)", table.name, column.name, col_type)
                 conn.execute(text(f'ALTER TABLE "{table.name}" ADD COLUMN "{column.name}" {col_type}'))
+
+
+def dedupe_tracking_events(engine: Engine) -> None:
+    """One-time cleanup for tracking_events rows inserted by a since-fixed bug in
+    pipeline.py: the old dedup check compared a stale, loop-external set of keys,
+    so a carrier response where several events shared a key (most often several
+    events with an unparseable/missing timestamp) got every one of them inserted
+    instead of just the first. Safe to run on every startup — once the duplicates
+    are gone there's nothing left to match, so this is a no-op from then on.
+    Rows are considered duplicates only if package_id, event_time, description,
+    AND location_text all match; keeps the lowest id of each group.
+    """
+    with engine.begin() as conn:
+        result = conn.execute(
+            text(
+                """
+                DELETE FROM tracking_events
+                WHERE id NOT IN (
+                    SELECT MIN(id) FROM tracking_events
+                    GROUP BY package_id, event_time, description, location_text
+                )
+                """
+            )
+        )
+        if result.rowcount:
+            logger.warning("removed %d duplicate tracking_events rows", result.rowcount)

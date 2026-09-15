@@ -170,6 +170,10 @@ To pick up later changes, use Portainer's **Pull and redeploy** on the stack
   without a separate migration-file workflow. It only handles adding
   nullable columns (the only kind of change this app has needed so far) —
   it won't handle a dropped/renamed column or a new `NOT NULL` constraint.
+  It also runs a one-time (idempotent) cleanup there for duplicate
+  `tracking_events` rows left behind by a fixed bug (see below) — safe to
+  run on every startup since there's nothing left to remove after the first
+  successful pass.
 
 ## Manual triggers
 
@@ -179,6 +183,21 @@ background jobs immediately.
 
 ## UI notes
 
+- **Fixed: duplicate scan entries and a map pin that didn't match the last
+  scan.** Both traced back to the same loop in `pipeline.py`'s
+  `run_tracking_refresh`. It deduped new events against a snapshot taken
+  once before the loop instead of updating that snapshot as it went, so
+  when a carrier response had several events that failed to parse a
+  timestamp (all landing on the same "no time" dedup key), every one of
+  them got inserted as if new — hence dozens of near-identical rows. Only
+  actually-distinct events (differing description or location) still count
+  as separate now. Separately, the "last known location" was simply
+  whichever event got processed last in the loop, not the one with the
+  latest timestamp — and every carrier returns its events newest-first, so
+  that was reliably picking the *oldest* event in a batch, not the newest.
+  Both are fixed, existing duplicate rows are cleaned up automatically on
+  next startup, and a `last_lat`/`last_lon` a package already had wrong
+  self-corrects on its next successful refresh.
 - **Per-package error visibility** — if a carrier API call fails (bad
   credentials, rate limiting, a network error), that's no longer silent.
   The package gets a "⚠ refresh failing" badge in the sidebar list and map

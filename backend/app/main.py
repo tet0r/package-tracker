@@ -32,6 +32,7 @@ app.include_router(
 async def on_startup():
     models.Base.metadata.create_all(bind=engine)
     migrations.ensure_schema(engine, models.Base)
+    migrations.dedupe_tracking_events(engine)
     start_background_loops()
 
 

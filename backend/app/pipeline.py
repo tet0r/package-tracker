@@ -98,40 +98,66 @@ def run_tracking_refresh() -> None:
                 package.last_error_at = None
                 db.commit()
 
-            existing_times = {
-                e.event_time.isoformat() if e.event_time else None for e in package.events
+            # Dedupe on (time, description, location) rather than time alone: carrier
+            # timestamps sometimes fail to parse (→ None for every event in a response),
+            # and a time-only key with a stale, loop-external "seen" set let every event
+            # in a single batch pass the check, inserting dozens of near-duplicate rows.
+            existing_keys = {
+                (e.event_time.isoformat() if e.event_time else None, e.description, e.location_text)
+                for e in package.events
             }
 
-            latest_event = None
+            # Track the chronologically newest located event explicitly rather than just
+            # taking whichever event happens to be processed last — every carrier module
+            # returns events newest-first, so a blind overwrite was keeping the OLDEST
+            # event of each batch as "latest", not the newest.
+            best_time = package.last_update_at
+            if best_time is not None and best_time.tzinfo is not None:
+                best_time = best_time.replace(tzinfo=None)
+            best_location = {
+                "lat": package.last_lat,
+                "lon": package.last_lon,
+                "location": package.last_location_text,
+            }
+
             for event in result["events"]:
                 event_time = _parse_time(event.get("time"))
-                key = event_time.isoformat() if event_time else None
-                if key in existing_times:
-                    continue
-
+                description = event.get("description")
                 location = event.get("location")
+                key = (event_time.isoformat() if event_time else None, description, location)
+
+                # Carriers generally resend their full event history each cycle, not just
+                # new deltas — so re-geocode (cache-backed, cheap) and reconsider this event
+                # for "latest" even when it's already stored, rather than only checking
+                # newly-inserted rows. That also self-heals a package.last_lat/lon that was
+                # set wrong by the pre-fix version of this loop, next refresh after upgrading.
                 coords = geocode.geocode(db, location) if location else None
                 lat, lon = coords if coords else (None, None)
 
-                db.add(
-                    models.TrackingEvent(
-                        package_id=package.id,
-                        event_time=event_time,
-                        location_text=location,
-                        lat=lat,
-                        lon=lon,
-                        description=event.get("description"),
-                        raw_status=event.get("raw_status"),
+                if key not in existing_keys:
+                    existing_keys.add(key)
+                    db.add(
+                        models.TrackingEvent(
+                            package_id=package.id,
+                            event_time=event_time,
+                            location_text=location,
+                            lat=lat,
+                            lon=lon,
+                            description=description,
+                            raw_status=event.get("raw_status"),
+                        )
                     )
-                )
-                if lat is not None:
-                    latest_event = {"lat": lat, "lon": lon, "location": location, "time": event_time}
 
-            if latest_event:
-                package.last_lat = latest_event["lat"]
-                package.last_lon = latest_event["lon"]
-                package.last_location_text = latest_event["location"]
-                package.last_update_at = latest_event["time"]
+                if lat is not None and event_time is not None:
+                    if best_time is None or event_time > best_time:
+                        best_time = event_time
+                        best_location = {"lat": lat, "lon": lon, "location": location}
+
+            if best_time is not None:
+                package.last_lat = best_location["lat"]
+                package.last_lon = best_location["lon"]
+                package.last_location_text = best_location["location"]
+                package.last_update_at = best_time
 
             was_delivered = package.status == "delivered"
             was_exception = package.status == "exception"
