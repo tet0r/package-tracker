@@ -119,6 +119,15 @@ def run_tracking_refresh() -> None:
                 "lon": package.last_lon,
                 "location": package.last_location_text,
             }
+            # A package's stored last-known location can itself be a leftover bad
+            # pin from before generic locations were excluded above — don't treat
+            # that as a trustworthy baseline. Discard it so the loop below has to
+            # re-derive the best AVAILABLE location from the full event history
+            # the carrier resends, rather than perpetuating a wrong pin forever.
+            discard_stale_baseline = not _is_specific_location(package.last_location_text)
+            if discard_stale_baseline:
+                best_time = None
+                best_location = {"lat": None, "lon": None, "location": None}
 
             for event in result["events"]:
                 event_time = _parse_time(event.get("time"))
@@ -131,7 +140,11 @@ def run_tracking_refresh() -> None:
                 # for "latest" even when it's already stored, rather than only checking
                 # newly-inserted rows. That also self-heals a package.last_lat/lon that was
                 # set wrong by the pre-fix version of this loop, next refresh after upgrading.
-                coords = geocode.geocode(db, location) if location else None
+                coords = (
+                    geocode.geocode(db, location)
+                    if location and _is_specific_location(location)
+                    else None
+                )
                 lat, lon = coords if coords else (None, None)
 
                 if key not in existing_keys:
@@ -158,6 +171,14 @@ def run_tracking_refresh() -> None:
                 package.last_lon = best_location["lon"]
                 package.last_location_text = best_location["location"]
                 package.last_update_at = best_time
+            elif discard_stale_baseline:
+                # Nothing specific enough to pin was found anywhere in the carrier's
+                # current history either — showing no pin (map falls back to "No
+                # location yet") is more honest than leaving the discarded bad one.
+                package.last_lat = None
+                package.last_lon = None
+                package.last_location_text = None
+                package.last_update_at = None
 
             was_delivered = package.status == "delivered"
             was_exception = package.status == "exception"
@@ -198,6 +219,28 @@ def run_tracking_refresh() -> None:
         logger.exception("tracking refresh failed")
     finally:
         db.close()
+
+
+_GENERIC_LOCATIONS = {
+    "us",
+    "usa",
+    "u.s.",
+    "u.s.a.",
+    "united states",
+    "united states of america",
+}
+
+
+def _is_specific_location(location: str | None) -> bool:
+    """Carriers sometimes report only a bare country name on a checkpoint where
+    city/state weren't populated (e.g. UPS's location string collapsing to just
+    "US" when address.city/stateProvince are empty). Geocoding that resolves to
+    a real coordinate — the country's centroid — which is a valid geocode result
+    but nowhere near the package, so these are excluded from ever becoming the
+    map pin rather than silently showing a misleading, wildly-off location."""
+    if not location:
+        return False
+    return location.strip().lower() not in _GENERIC_LOCATIONS
 
 
 def _is_out_for_delivery(description: str | None) -> bool:

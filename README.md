@@ -198,6 +198,20 @@ background jobs immediately.
   Both are fixed, existing duplicate rows are cleaned up automatically on
   next startup, and a `last_lat`/`last_lon` a package already had wrong
   self-corrects on its next successful refresh.
+
+  A third, related issue turned up once the above two were fixed: some
+  carrier checkpoints only report a bare country name (e.g. UPS returning
+  just `"US"` when a checkpoint's city/state weren't populated) — a real
+  location string that geocodes to a real coordinate, just one nowhere near
+  the package (the geographic center of the country). Since such an event
+  can legitimately be the newest one, it was winning the "latest location"
+  comparison and pinning the map at that centroid — for the contiguous US,
+  a point in rural north-central Kansas. Bare country names are now
+  excluded from ever becoming the map pin (`pipeline._is_specific_location`);
+  a package that already had one as its stored location self-heals the
+  same way on its next refresh, or the pin clears entirely (rather than
+  staying wrong) if nothing more specific exists anywhere in that
+  package's history.
 - **Per-package error visibility** — if a carrier API call fails (bad
   credentials, rate limiting, a network error), that's no longer silent.
   The package gets a "⚠ refresh failing" badge in the sidebar list and map
